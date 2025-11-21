@@ -1,0 +1,31 @@
+[project]
+name = "bronco-trade-agents"
+version = "0.0.1"
+description = "test"
+authors = [
+    {name = "qiuqiuaiweb3",email = "qiuqiuaiweb3@gmail.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "requests (>=2.32.5,<3.0.0)",
+    "pandas-ta (>=0.4.71b0,<0.5.0)",
+    "sqlalchemy (>=2.0.44,<3.0.0)",
+    "numpy (>=2.2,<2.3)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "tenacity (>=9.1.2,<10.0.0)",
+    "apscheduler (>=3.11.1,<4.0.0)",
+    "pandas (>=2.3.3,<3.0.0)",
+    "pydantic (>=2.12.4,<3.0.0)",
+    "rich (>=14.2.0,<15.0.0)",
+    "textual (>=6.6.0,<7.0.0)",
+    "psycopg2-binary (>=2.9.11,<3.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

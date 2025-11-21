@@ -1,0 +1,19 @@
+
+services:
+  app:
+    build: .                    # 本地调试直接用当前目录里的 Dockerfile 构建镜像
+    env_file: .env              # 读取项目根目录的 .env，提供 Massive/Bronco/API_KEY 等敏感信息
+    depends_on:
+      - db                      # 等 db 服务健康启动后再启动 app，避免应用连不上数据库
+    volumes:
+      - ./logs:/app/logs        # 将容器内的 /app/logs 映射到宿主机 logs 目录，方便持久化日志
+  db:
+    image: timescale/timescaledb:2.15.2-pg15  # PostgreSQL 15 + TimescaleDB 2.15.2 官方镜像
+    environment:
+      POSTGRES_USER: trader      # 数据库用户名
+      POSTGRES_PASSWORD: secret  # 数据库密码（示例值，线上请换成强密码）
+      POSTGRES_DB: trading       # 默认数据库名
+    volumes:
+      - pgdata:/var/lib/postgresql/data     # 使用命名卷 pgdata 保存数据库数据，避免容器销毁后丢失
+volumes:
+  pgdata:                       # 声明命名卷 pgdata，供 db 服务使用
