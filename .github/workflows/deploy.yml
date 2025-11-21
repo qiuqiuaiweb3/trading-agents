@@ -1,0 +1,69 @@
+name: Deploy to Test Server
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.13"
+  POETRY_VERSION: "2.2.1"
+  REPO_URL: "https://github.com/qiuqiuaiweb3/trading-agents.git"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest   # GitHub 官方暂未提供 Debian 13 Runner，使用 ubuntu-latest 运行 CI 步骤
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: pip install "poetry==${{ env.POETRY_VERSION }}"
+
+      - name: Install dependencies (lock 文件校验)
+        run: poetry install --no-interaction --no-root
+
+      # 这里可按需增加 pytest / ruff / mypy 等质量门禁
+
+      - name: Add SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.REMOTE_HOST }}
+
+      - name: Deploy on Debian 13 host
+        env:
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+        run: |
+          ssh -o StrictHostKeyChecking=yes ${REMOTE_USER}@${REMOTE_HOST} <<EOF
+            set -euo pipefail
+            REPO="${REPO_URL}"
+            APP_DIR="${REMOTE_PATH}"
+
+            mkdir -p "$APP_DIR"
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone "$REPO" "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+            git fetch origin main
+            git reset --hard origin/main
+
+            cat > .env <<ENV
+MASSIVE_API_KEY=${{ secrets.MASSIVE_API_KEY }}
+DEEPSEEK_API=${{ secrets.DEEPSEEK_API }}
+# BRONCO_API_TOKEN=${{ secrets.BRONCO_API_TOKEN }}
+ENV
+            chmod 600 .env
+
+            docker compose down --remove-orphans || true
+            docker compose pull
+            docker compose up -d --build
+          EOF
