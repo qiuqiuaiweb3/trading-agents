@@ -57,10 +57,9 @@ jobs:
             git reset --hard origin/main
 
             cat > .env <<ENV
-MASSIVE_API_KEY=${{ secrets.MASSIVE_API_KEY }}
-DEEPSEEK_API=${{ secrets.DEEPSEEK_API }}
-# BRONCO_API_TOKEN=${{ secrets.BRONCO_API_TOKEN }}
-ENV
+            MASSIVE_API_KEY=${{ secrets.MASSIVE_API_KEY }}
+            DEEPSEEK_API=${{ secrets.DEEPSEEK_API }}
+            ENV
             chmod 600 .env
 
             docker compose down --remove-orphans || true
