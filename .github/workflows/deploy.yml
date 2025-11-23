@@ -12,7 +12,7 @@ env:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest   # GitHub 官方暂未提供 Debian 13 Runner，使用 ubuntu-latest 运行 CI 步骤
+    runs-on: ubuntu-latest   
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
