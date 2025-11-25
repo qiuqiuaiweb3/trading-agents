@@ -7,13 +7,14 @@
     - 交易接口：Bronco Trade_Contract_API
     - 模块间的数据格式：json
     - AI大模型：deepseek
-    - 测试环境：云服务器linux debian
+    - 开发环境：wsl debian 13
+    - 测试环境：云服务器 debian 13
     - 代码仓库：github + CICD流水线
     - 交易界面：python rich库
 
 项目构成：
     1. 选股模块：
-        - 手动设定交易范围：当前目标交易范围是NASDAQ 100
+        - 手动设定交易范围：当前目标交易范围是NASDAQ 100。https://www.nasdaq.com/market-activity/quotes/nasdaq-ndx-index
         - 手动设定选股指标，人工撰写postgresql的查询语句；
             - 行情数据：trade、quotes。
             - （以后再扩展）行情技术指标：SMA、EMA、RSI、MACD。

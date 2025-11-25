@@ -75,6 +75,7 @@ jobs:
             cat > .env <<ENV
             MASSIVE_API_KEY=$MASSIVE_API_KEY
             DEEPSEEK_API=$DEEPSEEK_API
+            DATABASE_URL=postgresql://trader:secret@db:5432/trading
             ENV
             chmod 600 .env
 

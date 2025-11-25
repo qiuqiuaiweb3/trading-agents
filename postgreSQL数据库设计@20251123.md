@@ -145,6 +145,43 @@ INSERT INTO market_calendar (date, status, open_time, close_time, description) V
 *注：Python 代码中需处理时区转换，将上述 ET 时间转为 UTC 后再进行比对。*
 
 ---
+### ai_decisions
+```sql
+CREATE TABLE ai_decisions (
+    id SERIAL PRIMARY KEY,
+    start_time TIMESTAMPTZ NOT NULL,    -- 策略切换/开始的时间
+    end_time TIMESTAMPTZ,               -- 策略结束/被切换的时间 (NULL 表示当前正在运行)
+    
+    ticker TEXT NOT NULL,               -- 针对哪个标的
+    
+    strategy_name TEXT NOT NULL,        -- 选中的策略名称 (如 "MACD_Trend_V1")
+    reason TEXT,                        -- AI 选择该策略的理由 (摘要)
+    
+    initial_price NUMERIC NOT NULL,     -- 策略开始时的标的价格
+    final_price NUMERIC,                -- 策略结束时的标的价格
+    
+    pnl_amount NUMERIC,                 -- 该策略运行期间的盈利金额 (Realized PnL)
+    pnl_percentage NUMERIC,             -- 收益率
+    
+    status TEXT DEFAULT 'active',       -- 'active' (运行中), 'completed' (已结束), 'force_stopped'
+    
+    ai_model_version TEXT               -- 记录是哪个版本的模型做的决策
+);
+
+-- 索引：方便查询某个标的的决策历史，或查找当前活跃的策略
+CREATE INDEX idx_ai_decisions_ticker_time ON ai_decisions (ticker, start_time DESC);
+CREATE INDEX idx_ai_decisions_active ON ai_decisions (ticker) WHERE status = 'active';
+```
+
+start_time / end_time：构成了策略的生命周期。当 AI 发出“切换”指令时，系统会：
+找到该标的当前 status='active' 的记录。
+更新其 end_time、final_price、pnl_amount。
+将 status 设为 completed。
+插入一条新的记录，start_time 为当前时间，status='active'。
+pnl_amount：这是核心字段。下次 AI 做决策时，可以 SELECT AVG(pnl_amount) FROM ai_decisions WHERE strategy_name = '...' 来评估该策略最近的表现。
+
+
+---
 
 ### 5. 技术指标 (可选/未来扩展)
 

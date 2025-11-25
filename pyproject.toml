@@ -20,7 +20,8 @@ dependencies = [
     "pydantic (>=2.12.4,<3.0.0)",
     "rich (>=14.2.0,<15.0.0)",
     "textual (>=6.6.0,<7.0.0)",
-    "psycopg2-binary (>=2.9.11,<3.0.0)"
+    "psycopg2-binary (>=2.9.11,<3.0.0)",
+    "pydantic-settings (>=2.12.0,<3.0.0)"
 ]
 
 [tool.poetry]

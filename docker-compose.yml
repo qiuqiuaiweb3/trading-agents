@@ -13,6 +13,8 @@ services:
       POSTGRES_USER: trader      # 数据库用户名
       POSTGRES_PASSWORD: secret  # 数据库密码（示例值，线上请换成强密码）
       POSTGRES_DB: trading       # 默认数据库名
+    ports:
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data     # 使用命名卷 pgdata 保存数据库数据，避免容器销毁后丢失
 volumes:
