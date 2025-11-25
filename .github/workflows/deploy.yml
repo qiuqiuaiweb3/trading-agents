@@ -71,12 +71,9 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            # 写入 .env，这里也会被 Runner 替换
-            cat > .env << 'ENVEOF'
-MASSIVE_API_KEY=${MASSIVE_API_KEY}
-DEEPSEEK_API=${DEEPSEEK_API}
-DATABASE_URL=postgresql://trader:secret@db:5432/trading
-ENVEOF
+            # 写入 .env - 使用 printf 避免 here-doc 嵌套问题
+            printf 'MASSIVE_API_KEY=%s\nDEEPSEEK_API=%s\nDATABASE_URL=postgresql://trader:secret@db:5432/trading\n' \
+              "${MASSIVE_API_KEY}" "${DEEPSEEK_API}" > .env
             chmod 600 .env
 
             docker compose down --remove-orphans || true
