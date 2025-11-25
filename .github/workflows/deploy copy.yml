@@ -1,0 +1,85 @@
+name: Deploy to Test Server
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.13"
+  POETRY_VERSION: "2.2.1"
+  REPO_URL: "https://github.com/qiuqiuaiweb3/trading-agents.git"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest   
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: pip install "poetry==${{ env.POETRY_VERSION }}"
+
+      - name: Install dependencies (lock 文件校验)
+        run: poetry install --no-interaction --no-root
+
+      # 这里可按需增加 pytest / ruff / mypy 等质量门禁
+
+      - name: Add SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+
+      - name: Deploy on Debian 13 host
+        env:
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+          MASSIVE_API_KEY: ${{ secrets.MASSIVE_API_KEY }}
+          DEEPSEEK_API: ${{ secrets.DEEPSEEK_API }}
+        run: |
+          # 使用 EOF 不带引号，允许本地变量 ($REMOTE_PATH 等) 被展开后再发送给远端
+          ssh -o StrictHostKeyChecking=yes ${REMOTE_USER}@${REMOTE_HOST} <<EOF
+            set -euo pipefail
+            
+            # 这些变量会被 Runner 替换为真实值
+            REPO="${REPO_URL}"
+            APP_DIR="$REMOTE_PATH"
+            
+            echo "Deploying to: \$APP_DIR"
+            
+            if [ -z "\$APP_DIR" ]; then
+              echo "Error: REMOTE_PATH is not set correctly!"
+              exit 1
+            fi
+
+            mkdir -p "\$APP_DIR"
+            
+            # 判断目录是否为空或是否为 git 仓库
+            if [ ! -d "\$APP_DIR/.git" ]; then
+              echo "Cloning repo..."
+              git clone "\$REPO" "\$APP_DIR"
+            fi
+
+            cd "\$APP_DIR"
+            git fetch origin main
+            git reset --hard origin/main
+
+            # 写入 .env，这里也会被 Runner 替换
+            cat > .env <<ENV
+            MASSIVE_API_KEY=$MASSIVE_API_KEY
+            DEEPSEEK_API=$DEEPSEEK_API
+            DATABASE_URL=postgresql://trader:secret@db:5432/trading
+            ENV
+            chmod 600 .env
+
+            docker compose down --remove-orphans || true
+            docker compose pull
+            docker compose up -d --build
+          EOF

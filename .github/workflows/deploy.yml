@@ -72,11 +72,11 @@ jobs:
             git reset --hard origin/main
 
             # 写入 .env，这里也会被 Runner 替换
-            cat > .env <<ENV
-            MASSIVE_API_KEY=$MASSIVE_API_KEY
-            DEEPSEEK_API=$DEEPSEEK_API
-            DATABASE_URL=postgresql://trader:secret@db:5432/trading
-            ENV
+            cat > .env << 'ENVEOF'
+MASSIVE_API_KEY=${MASSIVE_API_KEY}
+DEEPSEEK_API=${DEEPSEEK_API}
+DATABASE_URL=postgresql://trader:secret@db:5432/trading
+ENVEOF
             chmod 600 .env
 
             docker compose down --remove-orphans || true
